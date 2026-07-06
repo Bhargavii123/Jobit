@@ -14,7 +14,7 @@ class JobSearchRequest(BaseModel):
 async def search_jobs(request: JobSearchRequest):
     if not request.skills:
         raise HTTPException(status_code=400, detail="Skills list cannot be empty")
-    
+
     if request.cities:
         all_jobs = []
         seen_urls = set()
@@ -26,7 +26,7 @@ async def search_jobs(request: JobSearchRequest):
                     all_jobs.append(job)
     else:
         all_jobs = await fetch_all_jobs(request.skills, location=request.location, job_titles=request.job_titles)
-    
+
     return {
         "success": True,
         "total": len(all_jobs),
