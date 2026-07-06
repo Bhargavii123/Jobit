@@ -39,5 +39,11 @@ def extract_skills_with_ai(resume_text: str) -> dict:
         max_tokens=1000
     )
     
-    result = response.choices[0].message.content
+    result = response.choices[0].message.content.strip()
+    # Remove markdown code blocks if AI wrapped response in them
+    if result.startswith("```"):
+        result = result.split("```")[1]
+        if result.startswith("json"):
+            result = result[4:]
+    result = result.strip()
     return json.loads(result)
