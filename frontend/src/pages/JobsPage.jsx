@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { Search, MapPin, DollarSign, ExternalLink, ChevronDown, RefreshCw } from "lucide-react"
+import { Search, MapPin, DollarSign, ExternalLink, ChevronDown, RefreshCw, FileText, X, Copy } from "lucide-react"
 import axios from "axios"
 
 const API = "https://fictional-space-giggle-4jq4qpvqp46qf7g56-8000.app.github.dev"
@@ -46,6 +46,10 @@ export default function JobsPage() {
   const [scoring, setScoring] = useState(false)
   const [location, setLocation] = useState("Remote")
   const [expIndex, setExpIndex] = useState(0)
+  const [coverLetter, setCoverLetter] = useState(null)
+  const [coverLetterJob, setCoverLetterJob] = useState(null)
+  const [generatingCL, setGeneratingCL] = useState(false)
+  const [copied, setCopied] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -97,11 +101,35 @@ export default function JobsPage() {
     setScoring(false)
   }
 
+  const handleCoverLetter = async (job) => {
+    setGeneratingCL(true)
+    setCoverLetterJob(job)
+    setCoverLetter(null)
+    try {
+      const res = await axios.post(`${API}/resume/coverletter`, {
+        profile,
+        job_title: job.title,
+        company: job.company,
+        job_description: job.description,
+      })
+      setCoverLetter(res.data.cover_letter)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setGeneratingCL(false)
+    }
+  }
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(coverLetter)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
   const displayJobs = scoredJobs.length > 0 ? scoredJobs : jobs
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navbar */}
       <nav className="bg-white border-b border-gray-100 px-8 py-4 flex justify-between items-center sticky top-0 z-10">
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
@@ -123,7 +151,6 @@ export default function JobsPage() {
       </nav>
 
       <div className="max-w-5xl mx-auto px-6 py-8">
-        {/* Profile skills */}
         {profile && (
           <div className="bg-white rounded-xl border border-gray-100 p-5 mb-6">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Your Skills</p>
@@ -137,16 +164,11 @@ export default function JobsPage() {
           </div>
         )}
 
-        {/* Filters */}
         <div className="bg-white rounded-xl border border-gray-100 p-5 mb-6 flex flex-wrap gap-4 items-end">
           <div className="flex-1 min-w-48">
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-2">Location</label>
             <div className="relative">
-              <select
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 text-sm appearance-none focus:outline-none focus:border-indigo-400"
-              >
+              <select value={location} onChange={(e) => setLocation(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 text-sm appearance-none focus:outline-none focus:border-indigo-400">
                 {LOCATIONS.map(l => <option key={l}>{l}</option>)}
               </select>
               <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-3 pointer-events-none" />
@@ -155,25 +177,17 @@ export default function JobsPage() {
           <div className="flex-1 min-w-48">
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-2">Experience Level</label>
             <div className="relative">
-              <select
-                value={expIndex}
-                onChange={(e) => setExpIndex(Number(e.target.value))}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 text-sm appearance-none focus:outline-none focus:border-indigo-400"
-              >
+              <select value={expIndex} onChange={(e) => setExpIndex(Number(e.target.value))} className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-gray-700 text-sm appearance-none focus:outline-none focus:border-indigo-400">
                 {EXPERIENCE_LEVELS.map((l, i) => <option key={i} value={i}>{l.label}</option>)}
               </select>
               <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-3 pointer-events-none" />
             </div>
           </div>
-          <button
-            onClick={fetchJobs}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
-          >
+          <button onClick={fetchJobs} className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
             <RefreshCw className="w-4 h-4" /> Search
           </button>
         </div>
 
-        {/* Results header */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold text-gray-900">
             {loading ? "Searching jobs..." : `${displayJobs.length} Jobs Found`}
@@ -181,7 +195,6 @@ export default function JobsPage() {
           </h2>
         </div>
 
-        {/* Job cards */}
         <div className="space-y-4">
           {loading ? (
             Array(5).fill(0).map((_, i) => <SkeletonCard key={i} />)
@@ -227,19 +240,63 @@ export default function JobsPage() {
                   </div>
                 )}
 
-                <a
-                  href={job.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-indigo-600 text-white text-sm px-5 py-2.5 rounded-lg hover:bg-indigo-700 transition font-medium"
-                >
-                  Apply Now <ExternalLink className="w-3.5 h-3.5" />
-                </a>
+                <div className="flex gap-3">
+                  <a href={job.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-indigo-600 text-white text-sm px-5 py-2.5 rounded-lg hover:bg-indigo-700 transition font-medium">
+                    Apply Now <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                  <button
+                    onClick={() => handleCoverLetter(job)}
+                    disabled={generatingCL && coverLetterJob?.url === job.url}
+                    className="inline-flex items-center gap-2 border border-indigo-600 text-indigo-600 text-sm px-5 py-2.5 rounded-lg hover:bg-indigo-50 transition font-medium disabled:opacity-50"
+                  >
+                    {generatingCL && coverLetterJob?.url === job.url ? (
+                      <><div className="w-3.5 h-3.5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" /> Generating...</>
+                    ) : (
+                      <><FileText className="w-3.5 h-3.5" /> Cover Letter</>
+                    )}
+                  </button>
+                </div>
               </div>
             ))
           )}
         </div>
       </div>
+
+      {(coverLetter || (generatingCL && coverLetterJob)) && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-6">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col">
+            <div className="flex justify-between items-center p-6 border-b">
+              <div>
+                <h3 className="font-bold text-gray-900 text-lg">Cover Letter</h3>
+                <p className="text-sm text-gray-500">{coverLetterJob?.title} at {coverLetterJob?.company}</p>
+              </div>
+              <button onClick={() => { setCoverLetter(null); setCoverLetterJob(null) }} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1">
+              {generatingCL ? (
+                <div className="flex items-center justify-center py-12 gap-3 text-indigo-600">
+                  <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                  Generating your personalized cover letter...
+                </div>
+              ) : (
+                <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{coverLetter}</p>
+              )}
+            </div>
+            {coverLetter && (
+              <div className="p-6 border-t flex gap-3">
+                <button onClick={handleCopy} className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
+                  <Copy className="w-4 h-4" /> {copied ? "Copied!" : "Copy to Clipboard"}
+                </button>
+                <button onClick={() => { setCoverLetter(null); setCoverLetterJob(null) }} className="text-sm text-gray-500 hover:text-gray-700">
+                  Close
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
