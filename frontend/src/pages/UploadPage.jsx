@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { Upload, FileText, X, ArrowRight, Search } from "lucide-react"
 import axios from "axios"
 
-const API = "https://fictional-space-giggle-4jq4qpvqp46qf7g56-8000.app.github.dev"
+const API = "https://jobit-assw.onrender.com"
 
 export default function UploadPage() {
   const [file, setFile] = useState(null)

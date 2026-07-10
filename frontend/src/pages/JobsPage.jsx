@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { Search, MapPin, DollarSign, ExternalLink, ChevronDown, RefreshCw, FileText, X, Copy } from "lucide-react"
 import axios from "axios"
 
-const API = "https://fictional-space-giggle-4jq4qpvqp46qf7g56-8000.app.github.dev"
+const API = "https://jobit-assw.onrender.com"
 
 const LOCATIONS = ["Remote", "India", "United States", "United Kingdom", "Canada"]
 const EXPERIENCE_LEVELS = [
